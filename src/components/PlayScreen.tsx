@@ -1,0 +1,258 @@
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { hitTestDropTarget } from '../drag/hitTest.ts'
+import type { DragPayload, DragSession, DropTarget } from '../drag/types.ts'
+import { countCorrect } from '../game/countCorrect.ts'
+import { formatTime } from '../game/formatTime.ts'
+import { ConfirmDialog } from './ConfirmDialog.tsx'
+import { DrinkCard } from './DrinkCard.tsx'
+
+type Player = 'solo' | 'A' | 'B'
+
+type PlayScreenProps = {
+  player: Player
+  slots: number
+  poolIds: string[]
+  answer: string[]
+  onSolved: (elapsedMs: number) => void
+  onRestartSetup: () => void
+}
+
+export function PlayScreen({
+  player,
+  slots,
+  poolIds,
+  answer,
+  onSolved,
+  onRestartSetup,
+}: PlayScreenProps) {
+  const [guess, setGuess] = useState<(string | null)[]>(() =>
+    Array.from({ length: slots }, () => null),
+  )
+  const [lastCorrect, setLastCorrect] = useState<number | null>(null)
+  const [confirmRestart, setConfirmRestart] = useState(false)
+  const [drag, setDrag] = useState<DragSession | null>(null)
+  const [elapsedMs, setElapsedMs] = useState(0)
+  const startRef = useRef(0)
+  const stoppedRef = useRef(false)
+  const boardRef = useRef<HTMLElement | null>(null)
+  const dragRef = useRef<DragSession | null>(null)
+
+  useEffect(() => {
+    startRef.current = performance.now()
+    let frame = 0
+    const tick = (t: number) => {
+      if (stoppedRef.current) return
+      setElapsedMs(t - startRef.current)
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [])
+  const full = guess.every((slot) => slot !== null)
+  const playerLabel =
+    player === 'solo' ? '單人' : player === 'A' ? '玩家 A' : '玩家 B'
+
+  const applyDrop = (payload: DragPayload, target: DropTarget) => {
+    setGuess((current) => {
+      const next = [...current]
+      if (payload.from === 'pool' && target.to === 'slot') {
+        next[target.index] = payload.drinkId
+        return next
+      }
+      if (payload.from === 'slot' && target.to === 'pool') {
+        next[payload.index] = null
+        return next
+      }
+      if (payload.from === 'slot' && target.to === 'slot') {
+        const a = payload.index
+        const b = target.index
+        if (a !== b) {
+          const tmp = next[a] ?? null
+          next[a] = next[b] ?? null
+          next[b] = tmp
+        }
+        return next
+      }
+      return current
+    })
+  }
+
+  const onPointerDown = (
+    event: PointerEvent<HTMLElement>,
+    payload: DragPayload,
+  ) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    const session: DragSession = {
+      payload,
+      x: event.clientX,
+      y: event.clientY,
+      over: hitTestDropTarget(event.clientX, event.clientY, boardRef.current),
+    }
+    dragRef.current = session
+    setDrag(session)
+  }
+
+  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    if (!dragRef.current) return
+    const session: DragSession = {
+      payload: dragRef.current.payload,
+      x: event.clientX,
+      y: event.clientY,
+      over: hitTestDropTarget(event.clientX, event.clientY, boardRef.current),
+    }
+    dragRef.current = session
+    setDrag(session)
+  }
+
+  const endDrag = () => {
+    const session = dragRef.current
+    dragRef.current = null
+    setDrag(null)
+    if (session?.over) {
+      applyDrop(session.payload, session.over)
+    }
+  }
+
+  const submit = () => {
+    if (!full) return
+    const n = countCorrect(guess, answer)
+    setLastCorrect(n)
+    if (n === slots) {
+      stoppedRef.current = true
+      const elapsed = performance.now() - startRef.current
+      onSolved(elapsed)
+    }
+  }
+
+  const draggingId =
+    drag?.payload.from === 'pool'
+      ? drag.payload.drinkId
+      : drag?.payload.from === 'slot'
+        ? guess[drag.payload.index]
+        : null
+
+  return (
+    <main
+      className="screen screen--play"
+      ref={boardRef}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <header className="play-bar">
+        <div>
+          <p className="eyebrow">{playerLabel}</p>
+          <p className="timer" aria-live="off">
+            {formatTime(elapsedMs)}
+            <span>秒</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn--ghost btn--small"
+          onClick={() => setConfirmRestart(true)}
+        >
+          回設定
+        </button>
+      </header>
+
+      <section className="shelf" aria-label="排列區">
+        <p className="section-label">排列</p>
+        <div className="slot-row">
+          {guess.map((id, index) => {
+            const isSource =
+              drag?.payload.from === 'slot' && drag.payload.index === index
+            const isOver =
+              drag?.over?.to === 'slot' && drag.over.index === index
+            return (
+              <div
+                key={index}
+                className={`slot${id ? '' : ' is-empty'}${isOver ? ' is-over' : ''}`}
+                data-drop="slot"
+                data-slot-index={index}
+              >
+                {id ? (
+                  <button
+                    type="button"
+                    className="drag-handle"
+                    aria-label={`第 ${index + 1} 格 ${id}`}
+                    onPointerDown={(e) =>
+                      onPointerDown(e, { from: 'slot', index })
+                    }
+                  >
+                    <DrinkCard drinkId={id} size="slot" dimmed={isSource} />
+                  </button>
+                ) : (
+                  <span className="slot__placeholder">{index + 1}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      <section
+        className={`pool${drag?.over?.to === 'pool' ? ' is-over' : ''}`}
+        data-drop="pool"
+        aria-label="牌庫"
+      >
+        <p className="section-label">
+          牌庫
+          {drag?.payload.from === 'slot' ? ' · 拖回此處可清空' : ''}
+        </p>
+        <div className="pool__grid">
+          {poolIds.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className="drag-handle"
+              aria-label={`牌庫 ${id}`}
+              onPointerDown={(e) => onPointerDown(e, { from: 'pool', drinkId: id })}
+            >
+              <DrinkCard drinkId={id} size="pool" />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <footer className="play-footer">
+        <p className="feedback" aria-live="polite">
+          {lastCorrect === null
+            ? '填滿後送出，只會看到全對的格數。'
+            : `目前 ${lastCorrect} 個位置全對`}
+        </p>
+        <button
+          type="button"
+          className="btn btn--primary btn--block"
+          disabled={!full}
+          onClick={submit}
+        >
+          送出
+        </button>
+      </footer>
+
+      {drag && draggingId && (
+        <div
+          className="drag-ghost"
+          style={{ left: drag.x, top: drag.y }}
+        >
+          <DrinkCard drinkId={draggingId} size="ghost" />
+        </div>
+      )}
+
+      {confirmRestart && (
+        <ConfirmDialog
+          title="回到設定？"
+          message="目前進度會消失，計時也會中止。"
+          confirmLabel="回到設定"
+          cancelLabel="繼續玩"
+          onCancel={() => setConfirmRestart(false)}
+          onConfirm={onRestartSetup}
+        />
+      )}
+    </main>
+  )
+}
