@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import { hitTestDropTarget } from '../drag/hitTest.ts'
 import type { DragPayload, DragSession, DropTarget } from '../drag/types.ts'
 import { countCorrect } from '../game/countCorrect.ts'
 import { formatTime } from '../game/formatTime.ts'
-import { applyLineupDrop, remainingPoolIds } from '../game/lineup.ts'
+import { applyLineupDrop, poolSlots } from '../game/lineup.ts'
 import { ConfirmDialog } from './ConfirmDialog.tsx'
 import { DrinkCard } from './DrinkCard.tsx'
 
@@ -54,7 +54,7 @@ export function PlayScreen({
     player === 'solo' ? '單人' : player === 'A' ? '玩家 A' : '玩家 B'
   const draggingPoolId =
     drag?.payload.from === 'pool' ? drag.payload.drinkId : null
-  const visiblePool = remainingPoolIds(poolIds, guess, draggingPoolId)
+  const shelf = poolSlots(poolIds, guess, draggingPoolId)
 
   const applyDrop = (payload: DragPayload, target: DropTarget) => {
     setGuess((current) => applyLineupDrop(current, payload, target))
@@ -200,17 +200,18 @@ export function PlayScreen({
       >
         <p className="section-label">
           牌庫
-          {drag?.payload.from === 'slot' ? ' · 拖回此處可放回' : ''}
+          {drag?.payload.from === 'slot' ? ' · 拖回此處可放回原位' : ''}
         </p>
-        {visiblePool.length === 0 ? (
-          <p className="pool__empty">牌庫空了，可把格子拖回來。</p>
-        ) : (
-          <div className="pool__grid">
-            {visiblePool.map((id) => (
+        <div
+          className="pool__row"
+          style={{ '--pool-count': shelf.length } as CSSProperties}
+        >
+          {shelf.map((id, index) =>
+            id ? (
               <button
-                key={id}
+                key={poolIds[index]}
                 type="button"
-                className="drag-handle"
+                className="drag-handle pool__cell"
                 aria-label={`牌庫 ${id}`}
                 onPointerDown={(e) =>
                   onPointerDown(e, { from: 'pool', drinkId: id })
@@ -218,9 +219,15 @@ export function PlayScreen({
               >
                 <DrinkCard drinkId={id} size="pool" />
               </button>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div
+                key={poolIds[index] ?? index}
+                className="pool__cell pool__hole"
+                aria-hidden="true"
+              />
+            ),
+          )}
+        </div>
       </section>
 
       <footer className="play-footer">
