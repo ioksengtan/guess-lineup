@@ -142,6 +142,12 @@ export function PlayScreen({
       onPointerCancel={endDrag}
       onContextMenu={(e) => e.preventDefault()}
     >
+      {import.meta.env.DEV && (
+        <span data-testid="debug-answer" hidden>
+          {answer.join(',')}
+        </span>
+      )}
+
       <header className="play-bar">
         <div>
           <p className="eyebrow">{playerLabel}</p>

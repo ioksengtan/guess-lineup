@@ -20,7 +20,7 @@ export const DRINKS: readonly Drink[] = [
   {
     id: 'prime-orange',
     name: 'Prime 橙',
-    shortName: 'Prime',
+    shortName: 'Prime橙',
     hue: '#ff6b00',
     accent: '#1a1a1a',
     art: 'bottle',
@@ -44,8 +44,8 @@ export const DRINKS: readonly Drink[] = [
   {
     id: 'prime-ice-pop',
     name: 'Prime 冰棒',
-    shortName: '冰棒',
-    hue: '#ff4d4d',
+    shortName: 'Prime冰棒',
+    hue: '#ff5a6a',
     accent: '#ffffff',
     art: 'bottle',
   },
