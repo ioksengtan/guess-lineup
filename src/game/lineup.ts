@@ -1,15 +1,16 @@
 import type { DragPayload, DropTarget } from '../drag/types.ts'
 
-export function remainingPoolIds(
+/** Fixed-length pool shelf: placed/dragging cards leave a hole at the same index. */
+export function poolSlots(
   poolIds: readonly string[],
   guess: readonly (string | null)[],
   draggingPoolId?: string | null,
-): string[] {
+): (string | null)[] {
   const used = new Set(
     guess.filter((id): id is string => id !== null && id !== ''),
   )
   if (draggingPoolId) used.add(draggingPoolId)
-  return poolIds.filter((id) => !used.has(id))
+  return poolIds.map((id) => (used.has(id) ? null : id))
 }
 
 /** One physical card per id: place/replace/swap/return without duplicating. */

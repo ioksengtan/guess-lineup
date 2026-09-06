@@ -281,10 +281,9 @@ button:disabled {
   border-radius: 18px;
   padding: 12px;
   border: 1px solid var(--line);
-  flex: 1;
+  flex: 1 0 auto;
   min-height: 0;
-  overflow: auto;
-  touch-action: pan-y;
+  overflow: hidden;
 }
 
 .pool.is-over {
@@ -292,16 +291,37 @@ button:disabled {
   background: #fff0dc;
 }
 
-.pool__grid {
+.pool__row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(var(--pool-count, 6), minmax(0, 1fr));
+  gap: clamp(4px, 1.4vw, 8px);
+  align-items: stretch;
 }
 
-.pool__empty {
-  margin: 8px 0 0;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
+.pool__cell {
+  min-width: 0;
+  width: 100%;
+}
+
+.pool__hole {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pool__hole::before {
+  content: "";
+  width: 100%;
+  aspect-ratio: 3 / 5;
+  border-radius: 12px;
+  border: 2px dashed #e7c39a;
+  background: #fff8ee;
+}
+
+.pool__hole::after {
+  content: "";
+  height: 1.15em;
 }
 
 .drag-handle {
@@ -333,7 +353,6 @@ button:disabled {
 
 .drink-card__photo {
   aspect-ratio: 3 / 5;
-  max-height: 92px;
   object-fit: cover;
   border: 2px solid var(--drink-accent);
 }
@@ -341,7 +360,6 @@ button:disabled {
 .drink-card__art {
   position: relative;
   aspect-ratio: 3 / 5;
-  max-height: 92px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--drink-hue) 55%, white), var(--drink-hue));
   border: 2px solid var(--drink-accent);
@@ -377,16 +395,20 @@ button:disabled {
   display: grid;
   place-items: center;
   font-weight: 900;
-  font-size: 1.1rem;
+  font-size: clamp(0.7rem, 3.2vw, 1.1rem);
   color: #333;
 }
 
 .drink-card__label {
-  font-size: 0.7rem;
+  font-size: clamp(0.48rem, 2.4vw, 0.7rem);
   font-weight: 800;
   color: var(--ink);
   text-align: center;
-  line-height: 1.2;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .drink-card--slot .drink-card__label,
