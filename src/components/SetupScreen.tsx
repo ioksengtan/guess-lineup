@@ -41,7 +41,7 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
         <p className="eyebrow">首發題材 · 橘色飲料架</p>
         <h1>橘架猜排列</h1>
         <p className="lede">
-          把牌庫拖到空位排出隱藏排列。送出後只會告訴你有幾個位置全對——對了哪一格不會說。愈快排對分數愈好。
+          把牌庫拖到空位排出隱藏排列。每種飲料只有一張，放上去牌庫就會少那張。送出後只會告訴你有幾個位置全對——對了哪一格不會說。愈快排對分數愈好。
         </p>
       </header>
 

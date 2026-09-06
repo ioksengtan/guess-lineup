@@ -3,6 +3,7 @@ import { hitTestDropTarget } from '../drag/hitTest.ts'
 import type { DragPayload, DragSession, DropTarget } from '../drag/types.ts'
 import { countCorrect } from '../game/countCorrect.ts'
 import { formatTime } from '../game/formatTime.ts'
+import { applyLineupDrop, remainingPoolIds } from '../game/lineup.ts'
 import { ConfirmDialog } from './ConfirmDialog.tsx'
 import { DrinkCard } from './DrinkCard.tsx'
 
@@ -51,30 +52,12 @@ export function PlayScreen({
   const full = guess.every((slot) => slot !== null)
   const playerLabel =
     player === 'solo' ? '單人' : player === 'A' ? '玩家 A' : '玩家 B'
+  const draggingPoolId =
+    drag?.payload.from === 'pool' ? drag.payload.drinkId : null
+  const visiblePool = remainingPoolIds(poolIds, guess, draggingPoolId)
 
   const applyDrop = (payload: DragPayload, target: DropTarget) => {
-    setGuess((current) => {
-      const next = [...current]
-      if (payload.from === 'pool' && target.to === 'slot') {
-        next[target.index] = payload.drinkId
-        return next
-      }
-      if (payload.from === 'slot' && target.to === 'pool') {
-        next[payload.index] = null
-        return next
-      }
-      if (payload.from === 'slot' && target.to === 'slot') {
-        const a = payload.index
-        const b = target.index
-        if (a !== b) {
-          const tmp = next[a] ?? null
-          next[a] = next[b] ?? null
-          next[b] = tmp
-        }
-        return next
-      }
-      return current
-    })
+    setGuess((current) => applyLineupDrop(current, payload, target))
   }
 
   const onPointerDown = (
@@ -165,6 +148,16 @@ export function PlayScreen({
         </button>
       </header>
 
+      <p
+        className={`feedback${lastCorrect === null ? ' is-pending' : ' is-result'}`}
+        data-testid="correct-count"
+        aria-live="polite"
+      >
+        {lastCorrect === null
+          ? '送出後會顯示全對格數'
+          : `目前 ${lastCorrect} 個位置全對`}
+      </p>
+
       <section className="shelf" aria-label="排列區">
         <p className="section-label">排列</p>
         <div className="slot-row">
@@ -207,29 +200,30 @@ export function PlayScreen({
       >
         <p className="section-label">
           牌庫
-          {drag?.payload.from === 'slot' ? ' · 拖回此處可清空' : ''}
+          {drag?.payload.from === 'slot' ? ' · 拖回此處可放回' : ''}
         </p>
-        <div className="pool__grid">
-          {poolIds.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className="drag-handle"
-              aria-label={`牌庫 ${id}`}
-              onPointerDown={(e) => onPointerDown(e, { from: 'pool', drinkId: id })}
-            >
-              <DrinkCard drinkId={id} size="pool" />
-            </button>
-          ))}
-        </div>
+        {visiblePool.length === 0 ? (
+          <p className="pool__empty">牌庫空了，可把格子拖回來。</p>
+        ) : (
+          <div className="pool__grid">
+            {visiblePool.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className="drag-handle"
+                aria-label={`牌庫 ${id}`}
+                onPointerDown={(e) =>
+                  onPointerDown(e, { from: 'pool', drinkId: id })
+                }
+              >
+                <DrinkCard drinkId={id} size="pool" />
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <footer className="play-footer">
-        <p className="feedback" aria-live="polite">
-          {lastCorrect === null
-            ? '填滿後送出，只會看到全對的格數。'
-            : `目前 ${lastCorrect} 個位置全對`}
-        </p>
         <button
           type="button"
           className="btn btn--primary btn--block"
