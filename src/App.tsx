@@ -10,8 +10,8 @@ import { defaultSettings, type GameSettings } from './types.ts'
 
 type Screen =
   | { kind: 'setup' }
-  | { kind: 'playing'; player: 'solo' | 'A' | 'B' }
-  | { kind: 'handoff' }
+  | { kind: 'playing'; player: 'solo' | 'A' | 'B'; timeA?: number }
+  | { kind: 'handoff'; timeA: number }
   | { kind: 'solo_result'; elapsedMs: number }
   | { kind: 'compare'; timeA: number; timeB: number }
 
@@ -36,13 +36,10 @@ function makePuzzle(settings: GameSettings): Puzzle {
 export default function App() {
   const [settings, setSettings] = useState<GameSettings>(defaultSettings)
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
-  const [timeA, setTimeA] = useState<number | null>(null)
   const [screen, setScreen] = useState<Screen>({ kind: 'setup' })
 
   const startGame = (nextSettings: GameSettings) => {
-    const next = makePuzzle(nextSettings)
-    setPuzzle(next)
-    setTimeA(null)
+    setPuzzle(makePuzzle(nextSettings))
     setScreen({
       kind: 'playing',
       player: nextSettings.mode === 'versus' ? 'A' : 'solo',
@@ -52,7 +49,6 @@ export default function App() {
   const goSetup = () => {
     setScreen({ kind: 'setup' })
     setPuzzle(null)
-    setTimeA(null)
   }
 
   if (screen.kind === 'setup') {
@@ -71,7 +67,9 @@ export default function App() {
     return (
       <div className="app">
         <HandoffScreen
-          onContinue={() => setScreen({ kind: 'playing', player: 'B' })}
+          onContinue={() =>
+            setScreen({ kind: 'playing', player: 'B', timeA: screen.timeA })
+          }
         />
       </div>
     )
@@ -129,13 +127,12 @@ export default function App() {
             return
           }
           if (screen.player === 'A') {
-            setTimeA(elapsedMs)
-            setScreen({ kind: 'handoff' })
+            setScreen({ kind: 'handoff', timeA: elapsedMs })
             return
           }
           setScreen({
             kind: 'compare',
-            timeA: timeA ?? elapsedMs,
+            timeA: screen.timeA ?? elapsedMs,
             timeB: elapsedMs,
           })
         }}
