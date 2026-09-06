@@ -16,28 +16,27 @@ describe('generateAnswer', () => {
     expect(generateAnswer(1, 4, SAMPLE_POOL)).toEqual([
       'monster-ultra-sunrise',
       'ghost-orange-cream',
-      'monster-ultra-sunrise',
+      'prime-ice-pop',
       'peace-tea',
     ])
   })
 
   it('only picks ids from the given pool prefix', () => {
-    const pool = getPoolIds(4)
-    const answer = generateAnswer(99, 6, pool)
+    const pool = getPoolIds(6)
+    const answer = generateAnswer(99, 4, pool)
     expect(answer.every((id) => pool.includes(id))).toBe(true)
-    expect(answer).toHaveLength(6)
+    expect(answer).toHaveLength(4)
   })
 
-  it('allows duplicates in the answer (D1)', () => {
-    let found = false
+  it('never repeats an id in the answer', () => {
     for (let seed = 0; seed < 200; seed++) {
-      const answer = generateAnswer(seed, 6, ['a', 'b'])
-      if (new Set(answer).size < answer.length) {
-        found = true
-        break
-      }
+      const answer = generateAnswer(seed, 4, SAMPLE_POOL)
+      expect(new Set(answer).size).toBe(answer.length)
     }
-    expect(found).toBe(true)
+  })
+
+  it('throws when slots exceed pool size', () => {
+    expect(() => generateAnswer(1, 5, ['a', 'b'])).toThrow()
   })
 
   it('changes when seed changes', () => {

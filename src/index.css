@@ -65,6 +65,9 @@ button:disabled {
 }
 
 .screen--play {
+  height: 100svh;
+  max-height: 100svh;
+  overflow: hidden;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -212,6 +215,7 @@ button:disabled {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .timer {
@@ -241,6 +245,7 @@ button:disabled {
   padding: 12px;
   box-shadow: var(--shadow);
   border: 1px solid #f3e0c6;
+  flex-shrink: 0;
 }
 
 .slot-row {
@@ -277,6 +282,9 @@ button:disabled {
   padding: 12px;
   border: 1px solid var(--line);
   flex: 1;
+  min-height: 0;
+  overflow: auto;
+  touch-action: pan-y;
 }
 
 .pool.is-over {
@@ -286,8 +294,14 @@ button:disabled {
 
 .pool__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
   gap: 8px;
+}
+
+.pool__empty {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
 }
 
 .drag-handle {
@@ -319,6 +333,7 @@ button:disabled {
 
 .drink-card__photo {
   aspect-ratio: 3 / 5;
+  max-height: 92px;
   object-fit: cover;
   border: 2px solid var(--drink-accent);
 }
@@ -326,6 +341,7 @@ button:disabled {
 .drink-card__art {
   position: relative;
   aspect-ratio: 3 / 5;
+  max-height: 92px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--drink-hue) 55%, white), var(--drink-hue));
   border: 2px solid var(--drink-accent);
@@ -389,6 +405,7 @@ button:disabled {
 
 .play-footer {
   margin-top: auto;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -396,10 +413,25 @@ button:disabled {
 
 .feedback {
   margin: 0;
+  flex-shrink: 0;
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.02rem;
+  min-height: 2.6em;
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: #fffaf3;
+  color: var(--ink-soft);
+}
+
+.feedback.is-result {
+  border-color: var(--orange);
+  background: #fff1dc;
   color: var(--orange-deep);
-  min-height: 1.4em;
+  box-shadow: 0 4px 12px rgba(212, 92, 18, 0.16);
 }
 
 .score {
