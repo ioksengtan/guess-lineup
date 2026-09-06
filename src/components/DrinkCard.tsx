@@ -33,7 +33,7 @@ export function DrinkCard({
       {!imgFailed && (
         <img
           className="drink-card__photo"
-          src={`/assets/drinks/${drink.id}.webp`}
+          src={`${import.meta.env.BASE_URL}assets/drinks/${drink.id}.webp`}
           alt=""
           draggable={false}
           hidden={!showPhoto}
