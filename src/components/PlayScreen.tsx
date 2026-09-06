@@ -158,6 +158,7 @@ export function PlayScreen({
           : `目前 ${lastCorrect} 個位置全對`}
       </p>
 
+      <div className="play-board">
       <section className="shelf" aria-label="排列區">
         <p className="section-label">排列</p>
         <div className="slot-row">
@@ -229,11 +230,13 @@ export function PlayScreen({
           )}
         </div>
       </section>
+      </div>
 
       <footer className="play-footer">
         <button
           type="button"
           className="btn btn--primary btn--block"
+          data-testid="submit-guess"
           disabled={!full}
           onClick={submit}
         >

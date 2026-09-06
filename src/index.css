@@ -56,6 +56,13 @@ button:disabled {
     linear-gradient(180deg, #fff7ec 0%, var(--bg) 40%, #f8d7a8 100%);
 }
 
+.app:has(.screen--play) {
+  height: 100svh;
+  min-height: 100svh;
+  max-height: 100svh;
+  overflow: hidden;
+}
+
 .screen {
   min-height: 100dvh;
   padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
@@ -67,10 +74,22 @@ button:disabled {
 .screen--play {
   height: 100svh;
   max-height: 100svh;
+  min-height: 0;
   overflow: hidden;
+  padding: 12px 14px max(10px, env(safe-area-inset-bottom));
+  gap: 10px;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.play-board {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
 }
 
 .hero h1,
@@ -220,7 +239,7 @@ button:disabled {
 
 .timer {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.65rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -242,10 +261,11 @@ button:disabled {
 .shelf {
   background: #fff;
   border-radius: 18px;
-  padding: 12px;
+  padding: 10px;
   box-shadow: var(--shadow);
   border: 1px solid #f3e0c6;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-height: 0;
 }
 
 .slot-row {
@@ -255,14 +275,14 @@ button:disabled {
 }
 
 .slot {
-  min-height: 108px;
+  min-height: 0;
   border-radius: 14px;
   border: 2px dashed #e7c39a;
   background: #fff8ee;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
+  padding: 4px;
 }
 
 .slot.is-over {
@@ -279,11 +299,13 @@ button:disabled {
 .pool {
   background: var(--card);
   border-radius: 18px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid var(--line);
-  flex: 1 0 auto;
+  flex: 1 1 0;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .pool.is-over {
@@ -296,11 +318,17 @@ button:disabled {
   grid-template-columns: repeat(var(--pool-count, 6), minmax(0, 1fr));
   gap: clamp(4px, 1.4vw, 8px);
   align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .pool__cell {
   min-width: 0;
+  min-height: 0;
   width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .pool__hole {
@@ -314,6 +342,7 @@ button:disabled {
   content: "";
   width: 100%;
   aspect-ratio: 3 / 5;
+  max-height: calc(100% - 1.2em);
   border-radius: 12px;
   border: 2px dashed #e7c39a;
   background: #fff8ee;
@@ -330,6 +359,7 @@ button:disabled {
   background: transparent;
   padding: 0;
   width: 100%;
+  height: 100%;
   touch-action: none;
 }
 
@@ -338,6 +368,18 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  min-height: 0;
+  width: 100%;
+}
+
+.drink-card--pool,
+.drink-card--slot {
+  height: 100%;
+}
+
+.drink-card--slot .drink-card__art,
+.drink-card--slot .drink-card__photo {
+  max-height: 72px;
 }
 
 .drink-card.is-dimmed {
@@ -347,8 +389,15 @@ button:disabled {
 .drink-card__art,
 .drink-card__photo {
   width: 100%;
+  max-height: 100%;
+  min-height: 0;
   border-radius: 12px;
   pointer-events: none;
+}
+
+.drink-card--pool .drink-card__art,
+.drink-card--pool .drink-card__photo {
+  flex: 1 1 auto;
 }
 
 .drink-card__photo {
@@ -426,11 +475,13 @@ button:disabled {
 }
 
 .play-footer {
-  margin-top: auto;
-  flex-shrink: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  z-index: 6;
+  padding-top: 4px;
+  background: linear-gradient(180deg, transparent, #f8d7a8 18%);
 }
 
 .feedback {
@@ -438,11 +489,11 @@ button:disabled {
   flex-shrink: 0;
   text-align: center;
   font-weight: 800;
-  font-size: 1.02rem;
-  min-height: 2.6em;
+  font-size: 0.95rem;
+  min-height: 2.2em;
   display: grid;
   place-items: center;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 12px;
   border: 2px solid var(--line);
   background: #fffaf3;
