@@ -20,6 +20,12 @@ npm run build
 
 純前端，不需後端或帳號。
 
+## 線上玩
+
+手機直接開：https://ioksengtan.github.io/guess-lineup/
+
+GitHub Pages 專案站（`base` 在 CI 為 `/guess-lineup/`，本機仍是 `/`）。推到 `main` 後 Actions 會建置並部署。
+
 ## 怎麼玩
 
 1. 設定格數（3–6，預設 4）與牌庫種類（4–8，預設 6；必須 ≥ 格數）。
