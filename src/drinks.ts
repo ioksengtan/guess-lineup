@@ -7,7 +7,8 @@ export type Drink = {
   art: 'can' | 'bottle' | 'placeholder'
 }
 
-/** Fixed ordered catalog. Pool is the first `poolSize` ids (D3). Index 8 = P1 (D4). */
+/** Fixed ordered catalog. Pool is the first `poolSize` ids (D3). */
+
 export const DRINKS: readonly Drink[] = [
   {
     id: 'ghost-orange-cream',
@@ -66,12 +67,12 @@ export const DRINKS: readonly Drink[] = [
     art: 'bottle',
   },
   {
-    id: 'p1',
-    name: 'P1',
-    shortName: 'P1',
-    hue: '#c8c8c8',
-    accent: '#444444',
-    art: 'placeholder',
+    id: 'crush-orange-slice',
+    name: 'Crush 橙片',
+    shortName: '橙片',
+    hue: '#ffb020',
+    accent: '#7a2e00',
+    art: 'can',
   },
 ] as const
 
