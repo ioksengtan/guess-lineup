@@ -21,7 +21,7 @@ export function ResultScreen({ elapsedMs, onReplay, onSetup }: ResultScreenProps
           再玩一局
         </button>
         <button type="button" className="btn btn--ghost btn--block" onClick={onSetup}>
-          回設定
+          改設定
         </button>
       </div>
     </main>

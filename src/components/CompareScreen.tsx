@@ -35,10 +35,10 @@ export function CompareScreen({
       <p className="lede">同一題、同一種子。耗時較低者獲勝。</p>
       <div className="stack-actions">
         <button type="button" className="btn btn--primary btn--block" onClick={onReplay}>
-          再比一局
+          再玩一局
         </button>
         <button type="button" className="btn btn--ghost btn--block" onClick={onSetup}>
-          回設定
+          改設定
         </button>
       </div>
     </main>
