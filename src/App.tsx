@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { CompareScreen } from './components/CompareScreen.tsx'
 import { HandoffScreen } from './components/HandoffScreen.tsx'
 import { PlayScreen } from './components/PlayScreen.tsx'
@@ -6,7 +6,8 @@ import { ResultScreen } from './components/ResultScreen.tsx'
 import { SetupScreen } from './components/SetupScreen.tsx'
 import { getPoolIds } from './drinks.ts'
 import { createSeed, generateAnswer } from './game/generateAnswer.ts'
-import { defaultSettings, type GameSettings } from './types.ts'
+import { loadSettings, normalizeSettings, saveSettings } from './game/settingsStorage.ts'
+import type { GameSettings } from './types.ts'
 
 type Screen =
   | { kind: 'setup' }
@@ -18,33 +19,46 @@ type Screen =
 type Puzzle = {
   settings: GameSettings
   seed: number
+  round: number
   poolIds: string[]
   answer: string[]
 }
 
-function makePuzzle(settings: GameSettings): Puzzle {
+function makePuzzle(settings: GameSettings, round: number): Puzzle {
   const poolIds = getPoolIds(settings.poolSize)
   const seed = createSeed()
   return {
     settings,
     seed,
+    round,
     poolIds,
     answer: generateAnswer(seed, settings.slots, poolIds),
   }
 }
 
 export default function App() {
-  const [settings, setSettings] = useState<GameSettings>(defaultSettings)
+  const [settings, setSettings] = useState<GameSettings>(() => loadSettings())
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
   const [screen, setScreen] = useState<Screen>({ kind: 'setup' })
+  const roundRef = useRef(0)
+
+  const changeSettings = (next: GameSettings) => {
+    const safe = normalizeSettings(next)
+    setSettings(safe)
+    saveSettings(safe)
+  }
 
   const startGame = (nextSettings: GameSettings) => {
-    setPuzzle(makePuzzle(nextSettings))
+    const safe = normalizeSettings(nextSettings)
+    roundRef.current += 1
+    setPuzzle(makePuzzle(safe, roundRef.current))
     setScreen({
       kind: 'playing',
-      player: nextSettings.mode === 'versus' ? 'A' : 'solo',
+      player: safe.mode === 'versus' ? 'A' : 'solo',
     })
   }
+
+  const replay = () => startGame(puzzle?.settings ?? settings)
 
   const goSetup = () => {
     setScreen({ kind: 'setup' })
@@ -56,7 +70,7 @@ export default function App() {
       <div className="app">
         <SetupScreen
           settings={settings}
-          onChange={setSettings}
+          onChange={changeSettings}
           onStart={() => startGame(settings)}
         />
       </div>
@@ -80,7 +94,7 @@ export default function App() {
       <div className="app">
         <ResultScreen
           elapsedMs={screen.elapsedMs}
-          onReplay={() => startGame(settings)}
+          onReplay={replay}
           onSetup={goSetup}
         />
       </div>
@@ -93,7 +107,7 @@ export default function App() {
         <CompareScreen
           timeA={screen.timeA}
           timeB={screen.timeB}
-          onReplay={() => startGame(settings)}
+          onReplay={replay}
           onSetup={goSetup}
         />
       </div>
@@ -105,7 +119,7 @@ export default function App() {
       <div className="app">
         <SetupScreen
           settings={settings}
-          onChange={setSettings}
+          onChange={changeSettings}
           onStart={() => startGame(settings)}
         />
       </div>
@@ -115,7 +129,7 @@ export default function App() {
   return (
     <div className="app">
       <PlayScreen
-        key={`${puzzle.seed}-${screen.player}`}
+        key={`${puzzle.round}-${screen.player}`}
         player={screen.player}
         slots={puzzle.settings.slots}
         poolIds={puzzle.poolIds}
