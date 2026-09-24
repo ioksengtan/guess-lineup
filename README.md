@@ -41,8 +41,8 @@ GitHub Pages 專案站（`base` 在 CI 為 `/guess-lineup/`，本機仍是 `/`�
 - 答案**不重複**（從牌庫不放回抽樣）。每種飲料實體只有一張。
 - 計時在進入遊玩畫面時開始（A / B 各自獨立）。
 - 牌庫是固定飲料 id 清單的前 N 個，不依種子洗牌；只有答案用種子。
-- 第 8 種是標示 **P1** 的占位牌。
+- 第 8 種是 `crush-orange-slice`（Crush 橙片）：架上沒有第 8 個獨立品牌，用下層 Crush 罐偏果粒的另一張裁切，避免候選數 8 仍是灰塊。
 
-飲料 id 順序：`ghost-orange-cream`、`prime-orange`、`crush-orange`、`monster-ultra-sunrise`、`prime-ice-pop`、`peace-tea`、`gatorade-orange`、`p1`。
+飲料 id 順序：`ghost-orange-cream`、`prime-orange`、`crush-orange`、`monster-ultra-sunrise`、`prime-ice-pop`、`peace-tea`、`gatorade-orange`、`crush-orange-slice`。
 
-卡片可先用色塊＋標籤。若要換圖，放到 `public/assets/drinks/{id}.webp`。
+卡面圖在 `public/assets/drinks/{id}.webp`（約 320×440）。載入失敗時才退回色塊。

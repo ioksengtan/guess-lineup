@@ -15,8 +15,10 @@ export function DrinkCard({
   dimmed = false,
 }: DrinkCardProps) {
   const drink = getDrink(drinkId)
-  const [imgFailed, setImgFailed] = useState(false)
-  const [imgLoaded, setImgLoaded] = useState(false)
+  const [loadedId, setLoadedId] = useState<string | null>(null)
+  const [failedId, setFailedId] = useState<string | null>(null)
+  const imgLoaded = loadedId === drinkId
+  const imgFailed = failedId === drinkId
   const showPhoto = !imgFailed && imgLoaded
 
   return (
@@ -30,25 +32,28 @@ export function DrinkCard({
       }
       aria-label={drink.name}
     >
-      {!imgFailed && (
-        <img
-          className="drink-card__photo"
-          src={`${import.meta.env.BASE_URL}assets/drinks/${drink.id}.webp`}
-          alt=""
-          draggable={false}
-          hidden={!showPhoto}
-          onLoad={() => setImgLoaded(true)}
-          onError={() => setImgFailed(true)}
-        />
-      )}
-      {!showPhoto && (
-        <div className="drink-card__art" aria-hidden="true">
-          <span className="drink-card__shine" />
-          {drink.art === 'placeholder' && (
-            <span className="drink-card__p1">P1</span>
-          )}
-        </div>
-      )}
+      <div className="drink-card__frame">
+        {!imgFailed && (
+          <img
+            className="drink-card__photo"
+            src={`${import.meta.env.BASE_URL}assets/drinks/${drink.id}.webp`}
+            alt=""
+            draggable={false}
+            hidden={!showPhoto}
+            decoding="async"
+            onLoad={() => setLoadedId(drinkId)}
+            onError={() => setFailedId(drinkId)}
+          />
+        )}
+        {!showPhoto && (
+          <div className="drink-card__art" aria-hidden="true">
+            <span className="drink-card__shine" />
+            {drink.art === 'placeholder' && (
+              <span className="drink-card__p1">P1</span>
+            )}
+          </div>
+        )}
+      </div>
       <span className="drink-card__label">{drink.shortName}</span>
     </div>
   )

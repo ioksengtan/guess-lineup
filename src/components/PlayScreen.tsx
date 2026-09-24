@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { hitTestDropTarget } from '../drag/hitTest.ts'
-import type { DragPayload, DragSession, DropTarget } from '../drag/types.ts'
+import type { DragPayload, DragSession } from '../drag/types.ts'
 import { countCorrect } from '../game/countCorrect.ts'
 import { formatTime } from '../game/formatTime.ts'
 import { applyLineupDrop, poolSlots } from '../game/lineup.ts'
@@ -53,50 +59,81 @@ export function PlayScreen({
   const playerLabel =
     player === 'solo' ? '單人' : player === 'A' ? '玩家 A' : '玩家 B'
   const draggingPoolId =
-    drag?.payload.from === 'pool' ? drag.payload.drinkId : null
+    drag?.active && drag.payload.from === 'pool' ? drag.payload.drinkId : null
   const shelf = poolSlots(poolIds, guess, draggingPoolId)
 
-  const applyDrop = (payload: DragPayload, target: DropTarget) => {
-    setGuess((current) => applyLineupDrop(current, payload, target))
-  }
-
   const onPointerDown = (
-    event: PointerEvent<HTMLElement>,
+    event: ReactPointerEvent<HTMLElement>,
     payload: DragPayload,
   ) => {
-    if (event.button !== 0) return
+    if (event.button !== 0 || dragRef.current) return
     event.preventDefault()
-    event.currentTarget.setPointerCapture(event.pointerId)
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId)
+    } catch {
+      // Capture can fail if the pointer already ended; window listeners still track it.
+    }
     const session: DragSession = {
       payload,
+      pointerId: event.pointerId,
+      originX: event.clientX,
+      originY: event.clientY,
       x: event.clientX,
       y: event.clientY,
-      over: hitTestDropTarget(event.clientX, event.clientY, boardRef.current),
+      active: false,
+      over: null,
     }
     dragRef.current = session
     setDrag(session)
   }
 
-  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
-    if (!dragRef.current) return
-    const session: DragSession = {
-      payload: dragRef.current.payload,
-      x: event.clientX,
-      y: event.clientY,
-      over: hitTestDropTarget(event.clientX, event.clientY, boardRef.current),
-    }
-    dragRef.current = session
-    setDrag(session)
-  }
+  useEffect(() => {
+    const thresholdSq = 10 * 10
 
-  const endDrag = () => {
-    const session = dragRef.current
-    dragRef.current = null
-    setDrag(null)
-    if (session?.over) {
-      applyDrop(session.payload, session.over)
+    const onPointerMove = (event: PointerEvent) => {
+      const current = dragRef.current
+      if (!current || event.pointerId !== current.pointerId) return
+      event.preventDefault()
+      const dx = event.clientX - current.originX
+      const dy = event.clientY - current.originY
+      const active = current.active || dx * dx + dy * dy >= thresholdSq
+      const session: DragSession = {
+        ...current,
+        x: event.clientX,
+        y: event.clientY,
+        active,
+        over: active
+          ? hitTestDropTarget(event.clientX, event.clientY, boardRef.current)
+          : null,
+      }
+      dragRef.current = session
+      setDrag(session)
     }
-  }
+
+    const finish = (event: PointerEvent, commit: boolean) => {
+      const current = dragRef.current
+      if (!current || event.pointerId !== current.pointerId) return
+      dragRef.current = null
+      setDrag(null)
+      if (commit && current.active && current.over) {
+        const payload = current.payload
+        const target = current.over
+        setGuess((guessNow) => applyLineupDrop(guessNow, payload, target))
+      }
+    }
+
+    const onPointerUp = (event: PointerEvent) => finish(event, true)
+    const onPointerCancel = (event: PointerEvent) => finish(event, false)
+
+    window.addEventListener('pointermove', onPointerMove, { passive: false })
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
+    return () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerCancel)
+    }
+  }, [])
 
   const submit = () => {
     if (!full) return
@@ -109,20 +146,16 @@ export function PlayScreen({
     }
   }
 
-  const draggingId =
-    drag?.payload.from === 'pool'
+  const draggingId = !drag?.active
+    ? null
+    : drag.payload.from === 'pool'
       ? drag.payload.drinkId
-      : drag?.payload.from === 'slot'
-        ? guess[drag.payload.index]
-        : null
+      : guess[drag.payload.index]
 
   return (
     <main
       className="screen screen--play"
       ref={boardRef}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
       onContextMenu={(e) => e.preventDefault()}
     >
       {import.meta.env.DEV && (
@@ -148,23 +181,15 @@ export function PlayScreen({
         </button>
       </header>
 
-      <p
-        className={`feedback${lastCorrect === null ? ' is-pending' : ' is-result'}`}
-        data-testid="correct-count"
-        aria-live="polite"
-      >
-        {lastCorrect === null
-          ? '送出後會顯示全對格數'
-          : `目前 ${lastCorrect} 個位置全對`}
-      </p>
-
       <div className="play-board">
       <section className="shelf" aria-label="排列區">
         <p className="section-label">排列</p>
         <div className="slot-row">
           {guess.map((id, index) => {
             const isSource =
-              drag?.payload.from === 'slot' && drag.payload.index === index
+              drag?.active === true &&
+              drag.payload.from === 'slot' &&
+              drag.payload.index === index
             const isOver =
               drag?.over?.to === 'slot' && drag.over.index === index
             return (
@@ -201,7 +226,9 @@ export function PlayScreen({
       >
         <p className="section-label">
           牌庫
-          {drag?.payload.from === 'slot' ? ' · 拖回此處可放回原位' : ''}
+          {drag?.active && drag.payload.from === 'slot'
+            ? ' · 拖回此處可放回原位'
+            : ''}
         </p>
         <div
           className="pool__row"
@@ -220,6 +247,14 @@ export function PlayScreen({
               >
                 <DrinkCard drinkId={id} size="pool" />
               </button>
+            ) : draggingPoolId === poolIds[index] ? (
+              <div
+                key={poolIds[index]}
+                className="pool__cell pool__source"
+                aria-hidden="true"
+              >
+                <DrinkCard drinkId={poolIds[index]!} size="pool" dimmed />
+              </div>
             ) : (
               <div
                 key={poolIds[index] ?? index}
@@ -233,6 +268,15 @@ export function PlayScreen({
       </div>
 
       <footer className="play-footer">
+        <p
+          className={`feedback${lastCorrect === null ? ' is-pending' : ' is-result'}`}
+          data-testid="correct-count"
+          aria-live="polite"
+        >
+          {lastCorrect === null
+            ? '送出後會顯示全對格數'
+            : `目前 ${lastCorrect} 個位置全對`}
+        </p>
         <button
           type="button"
           className="btn btn--primary btn--block"
@@ -244,7 +288,7 @@ export function PlayScreen({
         </button>
       </footer>
 
-      {drag && draggingId && (
+      {drag?.active && draggingId && (
         <div
           className="drag-ghost"
           style={{ left: drag.x, top: drag.y }}

@@ -61,7 +61,7 @@ export function SetupScreen({ settings, onChange, onStart }: SetupScreenProps) {
           onChange={setPoolSize}
         />
         {settings.poolSize === 8 && (
-          <p className="hint">第 8 種是標示 P1 的占位牌。</p>
+          <p className="hint">第 8 種是 Crush 橙片，和下層那罐 Crush 的果粒裁切。</p>
         )}
 
         <fieldset className="mode-field">
