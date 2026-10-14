@@ -10,8 +10,14 @@ import type { DragPayload, DragSession } from '../drag/types.ts'
 import { countCorrect } from '../game/countCorrect.ts'
 import { formatTime } from '../game/formatTime.ts'
 import { applyLineupDrop, poolSlots } from '../game/lineup.ts'
+import {
+  clearSubmitHistory,
+  recordSubmit,
+  type SubmitHistoryEntry,
+} from '../game/submitHistory.ts'
 import { ConfirmDialog } from './ConfirmDialog.tsx'
 import { DrinkCard } from './DrinkCard.tsx'
+import { SubmitHistory } from './SubmitHistory.tsx'
 
 type Player = 'solo' | 'A' | 'B'
 
@@ -34,6 +40,10 @@ export function PlayScreen({
 }: PlayScreenProps) {
   const [guess, setGuess] = useState<(string | null)[]>(() =>
     Array.from({ length: slots }, () => null),
+  )
+  // Dropped on remount: replay, setup, and the handoff to player B.
+  const [history, setHistory] = useState<SubmitHistoryEntry[]>(() =>
+    clearSubmitHistory(),
   )
   const [lastCorrect, setLastCorrect] = useState<number | null>(null)
   const [confirmRestart, setConfirmRestart] = useState(false)
@@ -137,7 +147,10 @@ export function PlayScreen({
 
   const submit = () => {
     if (!full) return
-    const n = countCorrect(guess, answer)
+    const lineup = guess.flatMap((id) => (id === null ? [] : [id]))
+    if (lineup.length !== slots) return
+    const n = countCorrect(lineup, answer)
+    setHistory((prev) => recordSubmit(prev, lineup, n))
     setLastCorrect(n)
     if (n === slots) {
       stoppedRef.current = true
@@ -266,6 +279,8 @@ export function PlayScreen({
         </div>
       </section>
       </div>
+
+      <SubmitHistory entries={history} />
 
       <footer className="play-footer">
         <p

@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { getDrink } from '../drinks.ts'
 
-type CardSize = 'slot' | 'pool' | 'ghost'
+type CardSize = 'slot' | 'pool' | 'ghost' | 'thumb'
 
 type DrinkCardProps = {
   drinkId: string

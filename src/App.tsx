@@ -129,6 +129,7 @@ export default function App() {
   return (
     <div className="app">
       <PlayScreen
+        // Remount clears this round's in-memory submit history.
         key={`${puzzle.round}-${screen.player}`}
         player={screen.player}
         slots={puzzle.settings.slots}

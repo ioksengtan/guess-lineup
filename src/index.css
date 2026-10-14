@@ -509,6 +509,117 @@ button:disabled {
   flex: none;
 }
 
+.submit-history {
+  flex: 0 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.submit-history__toggle {
+  flex: 0 0 auto;
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 0.86rem;
+  text-align: left;
+}
+
+.submit-history__toggle:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: -2px;
+}
+
+.submit-history__action {
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.submit-history__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  max-height: min(128px, 22dvh);
+  margin: 0;
+  padding: 0 8px 8px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.submit-history__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.submit-history__thumbs {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.submit-history__thumbs .drink-card--thumb {
+  flex: 1 1 0;
+  width: auto;
+  max-width: 36px;
+  min-width: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.submit-history__count,
+.submit-history__empty {
+  margin: 0;
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.submit-history__count {
+  color: var(--orange-deep);
+}
+
+.submit-history__empty {
+  color: var(--ink-soft);
+  font-weight: 700;
+  padding: 2px 2px 4px;
+}
+
+.drink-card--thumb .drink-card__label {
+  display: none;
+}
+
+.drink-card--thumb .drink-card__photo,
+.drink-card--thumb .drink-card__art {
+  border-radius: 6px;
+}
+
 .play-footer {
   flex: 0 0 auto;
   display: flex;
